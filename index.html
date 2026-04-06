@@ -3,45 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>Quản lý chi tiêu - Đồng bộ đám mây</title>
+    <title>Quản lý chi tiêu</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; }
-        .summary { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .summary { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; }
         .balance { text-align: center; margin-bottom: 20px; }
-        .balance-label { font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-        .balance-amount { font-size: 36px; font-weight: bold; color: #333; margin-top: 5px; }
-        .income-expense { display: flex; justify-content: space-between; gap: 15px; }
-        .income-box, .expense-box { flex: 1; text-align: center; padding: 15px; border-radius: 15px; background: #f8f9fa; }
-        .income-box h4, .expense-box h4 { font-size: 14px; color: #666; margin-bottom: 8px; }
+        .balance-amount { font-size: 36px; font-weight: bold; color: #333; }
+        .income-expense { display: flex; gap: 15px; }
+        .income-box, .expense-box { flex: 1; text-align: center; padding: 15px; background: #f8f9fa; border-radius: 15px; }
         .income-amount { color: #28a745; font-size: 20px; font-weight: bold; }
         .expense-amount { color: #dc3545; font-size: 20px; font-weight: bold; }
-        .add-transaction { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .add-transaction { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
-        input, select, button { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; font-family: inherit; transition: all 0.3s; }
-        input:focus, select:focus { outline: none; border-color: #667eea; }
+        input, button { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; }
+        button { background: #667eea; color: white; border: none; cursor: pointer; }
         .type-buttons { display: flex; gap: 10px; }
-        .type-btn { flex: 1; background: #f8f9fa; border: 2px solid #e0e0e0; cursor: pointer; text-align: center; font-weight: 500; }
-        .type-btn.active { background: #667eea; border-color: #667eea; color: white; }
-        button[type="submit"] { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; }
-        button[type="submit"]:active { transform: scale(0.98); }
-        .transactions { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .transactions h3 { margin-bottom: 15px; color: #333; }
-        .transaction-list { max-height: 400px; overflow-y: auto; }
-        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0; }
-        .transaction-info { flex: 1; }
-        .transaction-name { font-weight: 500; color: #333; margin-bottom: 4px; }
-        .transaction-date { font-size: 12px; color: #999; }
-        .transaction-amount { font-weight: bold; font-size: 16px; margin-right: 15px; }
-        .income-text { color: #28a745; }
-        .expense-text { color: #dc3545; }
-        .delete-btn { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; width: auto; }
-        .delete-btn:active { transform: scale(0.95); }
+        .type-btn { flex: 1; background: #f8f9fa; border: 2px solid #e0e0e0; cursor: pointer; text-align: center; padding: 12px; border-radius: 12px; }
+        .type-btn.active { background: #667eea; color: white; }
+        .transactions { background: white; border-radius: 20px; padding: 20px; }
+        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #eee; }
+        .delete-btn { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; width: auto; }
         .empty-state { text-align: center; color: #999; padding: 30px; }
-        .clear-all { background: #dc3545; margin-top: 15px; width: auto; padding: 10px 20px; font-size: 14px; }
-        .sync-status { text-align: center; font-size: 12px; color: #28a745; margin-top: 10px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -49,7 +33,6 @@
     <div class="container">
         <div class="summary">
             <div class="balance">
-                <div class="balance-label">Tổng số dư</div>
                 <div class="balance-amount" id="balance">0₫</div>
             </div>
             <div class="income-expense">
@@ -60,199 +43,140 @@
 
         <div class="add-transaction">
             <form id="transactionForm">
-                <div class="form-group"><input type="text" id="description" placeholder="Tên giao dịch (VD: Mua sắm, Lương...)" required></div>
-                <div class="form-group"><input type="number" id="amount" placeholder="Số tiền" step="1000" required></div>
+                <div class="form-group"><input type="text" id="description" placeholder="Tên giao dịch" required></div>
+                <div class="form-group"><input type="number" id="amount" placeholder="Số tiền" required></div>
                 <div class="form-group">
                     <div class="type-buttons">
-                        <button type="button" class="type-btn active" data-type="income">📈 Thu nhập</button>
-                        <button type="button" class="type-btn" data-type="expense">📉 Chi tiêu</button>
+                        <button type="button" class="type-btn active" data-type="income">Thu nhập</button>
+                        <button type="button" class="type-btn" data-type="expense">Chi tiêu</button>
                     </div>
                 </div>
-                <button type="submit">➕ Thêm giao dịch</button>
+                <button type="submit">Thêm giao dịch</button>
             </form>
         </div>
 
         <div class="transactions">
-            <h3>📋 Lịch sử giao dịch</h3>
-            <div class="transaction-list" id="transactionList"><div class="empty-state">Đang tải dữ liệu...</div></div>
-            <button class="clear-all" id="clearAllBtn" style="display: none;">🗑️ Xóa tất cả</button>
-            <div class="sync-status" id="syncStatus">🔄 Đang kết nối...</div>
+            <h3>Lịch sử giao dịch</h3>
+            <div id="transactionList"><div class="empty-state">Đang tải...</div></div>
+            <button id="clearAllBtn" style="margin-top: 15px; background: #dc3545; display: none;">Xóa tất cả</button>
         </div>
     </div>
 
     <script>
-        // === THAY URL VÀ KEY CỦA BẠN VÀO ĐÂY ===
+        // === THAY THÔNG TIN CỦA BẠN VÀO ĐÂY ===
         const SUPABASE_URL = 'https://oygozffveggeasqhmrnp.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95Z296ZmZ2ZWdnZWFzcWhtcm5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NjE3NTEsImV4cCI6MjA5MTAzNzc1MX0.qPM1Crc3jSYu1ChEE7u5TOu6v8_Z4pPeliZ0VGa0yLU';
         // ====================================
 
-        // Khởi tạo Supabase client (CHỈ MỘT LẦN DUY NHẤT)
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Khởi tạo - CHỈ MỘT DÒNG DUY NHẤT
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // Tạo ID cho thiết bị
-        let deviceId = localStorage.getItem('expense_device_id');
+        // Tạo ID thiết bị
+        let deviceId = localStorage.getItem('device_id');
         if (!deviceId) {
             deviceId = crypto.randomUUID();
-            localStorage.setItem('expense_device_id', deviceId);
+            localStorage.setItem('device_id', deviceId);
         }
-        console.log('Device ID:', deviceId);
 
-        // Hàm tiện ích
-        function formatMoney(amount) { return amount.toLocaleString('vi-VN') + '₫'; }
-        function getTodayDate() { return new Date().toISOString().split('T')[0]; }
-        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-        
-        // Cập nhật tổng quan
-        function updateSummary(transactions) {
-            const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-            const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
-            const balance = totalIncome - totalExpense;
-            document.getElementById('balance').textContent = formatMoney(balance);
+        function formatMoney(amount) {
+            return amount.toLocaleString('vi-VN') + '₫';
+        }
+
+        function getTodayDate() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        async function loadData() {
+            const { data, error } = await _supabase
+                .from('transactions')
+                .select('*')
+                .eq('user_id', deviceId);
+            
+            if (error) {
+                console.log('Lỗi:', error);
+                return;
+            }
+            
+            // Tính tổng
+            let totalIncome = 0, totalExpense = 0;
+            data.forEach(t => {
+                if (t.type === 'income') totalIncome += t.amount;
+                else totalExpense += t.amount;
+            });
+            
+            document.getElementById('balance').textContent = formatMoney(totalIncome - totalExpense);
             document.getElementById('totalIncome').textContent = formatMoney(totalIncome);
             document.getElementById('totalExpense').textContent = formatMoney(totalExpense);
-        }
-
-        // Hiển thị danh sách
-        function renderTransactions(transactions) {
+            
+            // Hiển thị danh sách
             const listEl = document.getElementById('transactionList');
             const clearBtn = document.getElementById('clearAllBtn');
-            if (!transactions || transactions.length === 0) {
-                listEl.innerHTML = '<div class="empty-state">📭 Chưa có giao dịch nào</div>';
+            
+            if (data.length === 0) {
+                listEl.innerHTML = '<div class="empty-state">Chưa có giao dịch</div>';
                 clearBtn.style.display = 'none';
                 return;
             }
+            
             clearBtn.style.display = 'block';
-            const sorted = [...transactions].reverse();
-            listEl.innerHTML = sorted.map(trans => `
-                <div class="transaction-item" data-id="${trans.id}">
-                    <div class="transaction-info">
-                        <div class="transaction-name">${escapeHtml(trans.description)}</div>
-                        <div class="transaction-date">${trans.date}</div>
+            listEl.innerHTML = data.map(t => `
+                <div class="transaction-item">
+                    <div>
+                        <div><strong>${t.description}</strong></div>
+                        <div style="font-size: 12px; color: #999;">${t.date}</div>
                     </div>
-                    <div class="transaction-amount ${trans.type === 'income' ? 'income-text' : 'expense-text'}">
-                        ${trans.type === 'income' ? '+' : '-'} ${formatMoney(trans.amount)}
+                    <div style="color: ${t.type === 'income' ? '#28a745' : '#dc3545'}; font-weight: bold;">
+                        ${t.type === 'income' ? '+' : '-'}${formatMoney(t.amount)}
                     </div>
-                    <button class="delete-btn" onclick="window.deleteTransaction('${trans.id}')">Xóa</button>
+                    <button class="delete-btn" onclick="deleteTransaction('${t.id}')">Xóa</button>
                 </div>
             `).join('');
         }
 
-        // Xóa giao dịch
         window.deleteTransaction = async (id) => {
-            if (!confirm('Bạn có chắc muốn xóa?')) return;
-            document.getElementById('syncStatus').innerHTML = '⏳ Đang xóa...';
-            const { error } = await supabase.from('transactions').delete().eq('id', id).eq('user_id', deviceId);
-            if (error) { 
-                console.error('Lỗi xóa:', error); 
-                alert('Lỗi: ' + error.message);
-                document.getElementById('syncStatus').innerHTML = '❌ Lỗi';
-            } else {
-                document.getElementById('syncStatus').innerHTML = '✅ Đã xóa!';
-                setTimeout(() => document.getElementById('syncStatus').innerHTML = '✅ Đồng bộ realtime', 1500);
+            if (confirm('Xóa?')) {
+                await _supabase.from('transactions').delete().eq('id', id);
+                loadData();
             }
         };
 
-        // Xóa tất cả
-        async function deleteAllTransactions() {
-            if (!confirm('⚠️ Xóa TẤT CẢ?')) return;
-            document.getElementById('syncStatus').innerHTML = '⏳ Đang xóa...';
-            const { error } = await supabase.from('transactions').delete().eq('user_id', deviceId);
-            if (error) { 
-                console.error('Lỗi xóa tất cả:', error);
-                alert('Lỗi: ' + error.message);
-                document.getElementById('syncStatus').innerHTML = '❌ Lỗi';
-            } else {
-                document.getElementById('syncStatus').innerHTML = '✅ Đã xóa tất cả!';
-                setTimeout(() => document.getElementById('syncStatus').innerHTML = '✅ Đồng bộ realtime', 1500);
+        document.getElementById('clearAllBtn').onclick = async () => {
+            if (confirm('Xóa tất cả?')) {
+                await _supabase.from('transactions').delete().eq('user_id', deviceId);
+                loadData();
             }
-        }
+        };
 
-        // Lấy dữ liệu
-        async function fetchAndRenderData() {
-            console.log('Đang tải dữ liệu...');
-            const { data, error } = await supabase
-                .from('transactions')
-                .select('*')
-                .eq('user_id', deviceId)
-                .order('date', { ascending: false });
-            
-            if (error) {
-                console.error('Lỗi fetch:', error);
-                document.getElementById('transactionList').innerHTML = '<div class="empty-state">❌ Lỗi kết nối database: ' + error.message + '</div>';
-                return;
-            }
-            
-            console.log('Đã tải', data?.length || 0, 'giao dịch');
-            if (data && data.length > 0) {
-                renderTransactions(data);
-                updateSummary(data);
-            } else {
-                renderTransactions([]);
-                updateSummary([]);
-            }
-        }
-
-        // Realtime
-        function setupRealtime() {
-            const channel = supabase
-                .channel('expenses')
-                .on('postgres_changes', 
-                    { event: '*', schema: 'public', table: 'transactions' },
-                    () => { fetchAndRenderData(); }
-                )
-                .subscribe((status) => {
-                    if (status === 'SUBSCRIBED') {
-                        console.log('Realtime đã kết nối!');
-                        document.getElementById('syncStatus').innerHTML = '✅ Đồng bộ realtime';
-                    }
-                });
-        }
-
-        // Thêm giao dịch
-        document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+        document.getElementById('transactionForm').onsubmit = async (e) => {
             e.preventDefault();
-            const description = document.getElementById('description').value.trim();
-            let amount = parseFloat(document.getElementById('amount').value);
+            const description = document.getElementById('description').value;
+            const amount = parseFloat(document.getElementById('amount').value);
             const type = document.querySelector('.type-btn.active').getAttribute('data-type');
             
-            if (!description) { alert('Nhập tên giao dịch'); return; }
-            if (isNaN(amount) || amount <= 0) { alert('Nhập số tiền hợp lệ'); return; }
+            if (!description || !amount) return alert('Nhập đầy đủ thông tin');
+            
+            await _supabase.from('transactions').insert([{
+                description, amount, type, date: getTodayDate(), user_id: deviceId
+            }]);
+            
+            document.getElementById('description').value = '';
+            document.getElementById('amount').value = '';
+            loadData();
+        };
 
-            const newTransaction = {
-                description, amount, type,
-                date: getTodayDate(),
-                user_id: deviceId
-            };
-            
-            document.getElementById('syncStatus').innerHTML = '⏳ Đang thêm...';
-            const { error } = await supabase.from('transactions').insert([newTransaction]);
-            
-            if (error) {
-                console.error('Lỗi insert:', error);
-                alert('Lỗi: ' + error.message);
-                document.getElementById('syncStatus').innerHTML = '❌ Lỗi: ' + error.message;
-            } else {
-                document.getElementById('description').value = '';
-                document.getElementById('amount').value = '';
-                document.getElementById('syncStatus').innerHTML = '✅ Đã thêm!';
-                setTimeout(() => document.getElementById('syncStatus').innerHTML = '✅ Đồng bộ realtime', 1500);
-            }
-        });
-        
-        // Chuyển đổi loại
         document.querySelectorAll('.type-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.onclick = () => {
                 document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-            });
+            };
         });
-        
-        document.getElementById('clearAllBtn').addEventListener('click', deleteAllTransactions);
-        
-        // Khởi động
-        console.log('Khởi động ứng dụng...');
-        setupRealtime();
-        fetchAndRenderData();
+
+        // Lắng nghe thay đổi realtime
+        _supabase.channel('public')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => loadData())
+            .subscribe();
+
+        loadData();
     </script>
 </body>
 </html>
