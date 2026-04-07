@@ -499,16 +499,34 @@
         let categories = [];
         let currentCategory = null; // null = tất cả, hoặc tên category
 
-        // Khởi tạo categories mặc định
-        function initCategories() {
-            // Đọc categories từ localStorage
-            const saved = localStorage.getItem('categories');
-            if (saved) {
-                categories = JSON.parse(saved);
-            } else {
-                // Categories mặc định
+        // Khởi tạo categories từ database
+        async function initCategories() {
+            console.log('Đang tải categories từ database...');
+            
+            const { data, error } = await _supabase
+                .from('categories')
+                .select('*')
+                .order('created_at', { ascending: true });
+            
+            if (error) {
+                console.error('Lỗi tải categories:', error);
+                // Fallback: dùng categories mặc định
                 categories = ['Ăn uống', 'Di chuyển', 'Giải trí', 'Sức khỏe', 'Hóa đơn', 'Mua sắm', 'Khác'];
-                localStorage.setItem('categories', JSON.stringify(categories));
+                renderCategories();
+                return;
+            }
+            
+            if (data && data.length > 0) {
+                categories = data.map(c => c.name);
+                console.log('Đã tải', categories.length, 'categories từ database');
+            } else {
+                // Không có categories trong database, tạo mặc định
+                categories = ['Ăn uống', 'Di chuyển', 'Giải trí', 'Sức khỏe', 'Hóa đơn', 'Mua sắm', 'Khác'];
+                console.log('Chưa có categories, tạo mặc định...');
+                
+                for (let cat of categories) {
+                    await _supabase.from('categories').insert([{ name: cat }]);
+                }
             }
             renderCategories();
         }
@@ -552,34 +570,63 @@
             loadData(); // Tải lại dữ liệu theo category
         }
         
-        // Thêm category mới
-        function addNewCategory() {
+        // Thêm category mới lên database
+        async function addNewCategory() {
             const newCat = prompt('Nhập tên hạng mục mới:');
             if (newCat && newCat.trim()) {
                 const catName = newCat.trim();
-                if (!categories.includes(catName)) {
-                    categories.push(catName);
-                    localStorage.setItem('categories', JSON.stringify(categories));
-                    renderCategories();
-                } else {
+                
+                if (categories.includes(catName)) {
                     alert('Hạng mục đã tồn tại!');
+                    return;
+                }
+                
+                const { error } = await _supabase
+                    .from('categories')
+                    .insert([{ name: catName }]);
+                
+                if (error) {
+                    console.error('Lỗi thêm category:', error);
+                    alert('Lỗi: ' + error.message);
+                } else {
+                    console.log('Đã thêm category:', catName);
+                    // Không cần push vào mảng categories, initCategories sẽ tự cập nhật
                 }
             }
         }
         
-        // Xóa category
-        window.deleteCategory = function(category) {
-            if (confirm(`Xóa hạng mục "${category}"? Các giao dịch thuộc hạng mục này sẽ hiển thị là "Khác".`)) {
-                categories = categories.filter(c => c !== category);
-                localStorage.setItem('categories', JSON.stringify(categories));
+        // Xóa category khỏi database
+        window.deleteCategory = async function(category) {
+            if (category === 'Khác') {
+                alert('Không thể xóa hạng mục "Khác"!');
+                return;
+            }
+            
+            if (confirm(`Xóa hạng mục "${category}"?\n\nCác giao dịch thuộc hạng mục này sẽ chuyển thành "Khác".`)) {
+                // Xóa category khỏi bảng categories
+                const { error } = await _supabase
+                    .from('categories')
+                    .delete()
+                    .eq('name', category);
+                
+                if (error) {
+                    console.error('Lỗi xóa category:', error);
+                    alert('Lỗi: ' + error.message);
+                    return;
+                }
+                
+                // Cập nhật các giao dịch cũ về 'Khác'
+                await _supabase
+                    .from('transactions')
+                    .update({ category: 'Khác' })
+                    .eq('category', category);
+                
+                console.log('Đã xóa category:', category);
                 
                 // Nếu đang chọn category bị xóa, chuyển về Tất cả
                 if (currentCategory === category) {
                     currentCategory = null;
                 }
-                
-                renderCategories();
-                loadData();
             }
         }
         
@@ -787,9 +834,11 @@
             });
         }
         // THIẾT LẬP REALTIME - LẮNG NGHE THAY ĐỔI TỪ DATABASE
-        const channel = _supabase.channel('public:transactions');
+        // Lắng nghe cả bảng transactions và categories
+        const channel = _supabase.channel('public:all');
         
         channel
+            // Lắng nghe thay đổi trên bảng transactions
             .on('postgres_changes', 
                 { 
                     event: '*',
@@ -797,7 +846,7 @@
                     table: 'transactions' 
                 }, 
                 (payload) => {
-                    console.log('[Realtime] Có thay đổi:', payload.eventType);
+                    console.log('[Realtime] Transactions thay đổi:', payload.eventType);
                     loadData();
                     
                     const syncDiv = document.getElementById('syncStatus');
@@ -805,6 +854,18 @@
                         syncDiv.className = 'sync-status status-connected';
                         syncDiv.innerHTML = '✅ Đã đồng bộ | ' + new Date().toLocaleTimeString();
                     }
+                }
+            )
+            // 👇 THÊM PHẦN NÀY: Lắng nghe thay đổi trên bảng categories
+            .on('postgres_changes',
+                { 
+                    event: '*',
+                    schema: 'public', 
+                    table: 'categories' 
+                },
+                (payload) => {
+                    console.log('[Realtime] Categories thay đổi:', payload.eventType);
+                    initCategories();  // Tải lại danh sách categories
                 }
             )
             .subscribe((status) => {
