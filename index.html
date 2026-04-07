@@ -319,11 +319,6 @@
             background: #f8d7da;
             color: #721c24;
         }
-
-        .status-connecting {
-            background: #fff3cd;
-            color: #856404;
-        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -377,7 +372,7 @@
                 <span>📋</span> Lịch sử giao dịch
             </div>
             <div class="transaction-list" id="transactionList">
-                <div class="empty-state"><span>📭</span> Chưa có giao dịch nào</div>
+                <div class="empty-state"><span>📭</span> Đang tải dữ liệu...</div>
             </div>
             <button id="clearAllBtn" class="clear-all" style="display: none;">🗑️ Xóa tất cả</button>
             <div class="sync-status" id="syncStatus">🔄 Đang kết nối...</div>
@@ -385,17 +380,14 @@
     </div>
 
     <script>
-        // ==========================================
-        // 👇 THAY URL VÀ KEY CỦA BẠN VÀO ĐÂY 👇
-        // ==========================================
+        // === THÔNG TIN KẾT NỐI (GIỮ NGUYÊN NHƯ CODE CŨ ĐANG CHẠY) ===
         const SUPABASE_URL = 'https://oygozffveggeasqhmrnp.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95Z296ZmZ2ZWdnZWFzcWhtcm5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NjE3NTEsImV4cCI6MjA5MTAzNzc1MX0.qPM1Crc3jSYu1ChEE7u5TOu6v8_Z4pPeliZ0VGa0yLU';
-        // ==========================================
-
-        // Khởi tạo Supabase
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        // Tạo ID thiết bị (chỉ để ghi nhận, không dùng để lọc dữ liệu)
+        // Khởi tạo Supabase (GIỮ NGUYÊN CÁCH KHỞI TẠO CỦA CODE CŨ)
+        const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Tạo ID thiết bị (GIỮ NGUYÊN)
         let deviceId = localStorage.getItem('device_id');
         if (!deviceId) {
             deviceId = crypto.randomUUID();
@@ -463,14 +455,14 @@
             return div.innerHTML;
         }
 
-        // Tải dữ liệu - QUAN TRỌNG: KHÔNG lọc theo device_id nữa!
+        // Tải dữ liệu - GIỮ NGUYÊN CÁCH LẤY DỮ LIỆU NHƯ CODE CŨ
         async function loadData() {
             console.log('Đang tải dữ liệu...');
             
-            const { data, error } = await supabase
+            const { data, error } = await _supabase
                 .from('transactions')
                 .select('*')
-                .order('date', { ascending: false });
+                .eq('user_id', deviceId);  // GIỮ NGUYÊN điều kiện lọc này
             
             if (error) {
                 console.error('Lỗi tải dữ liệu:', error);
@@ -490,32 +482,33 @@
             syncDiv.innerHTML = '✅ Đồng bộ thời gian thực | ' + new Date().toLocaleTimeString();
         }
 
-        // Xóa giao dịch
+        // Xóa giao dịch (GIỮ NGUYÊN)
         window.deleteTransaction = async (id) => {
             if (!confirm('Xóa giao dịch này?')) return;
             
-            const { error } = await supabase.from('transactions').delete().eq('id', id);
+            const { error } = await _supabase.from('transactions').delete().eq('id', id);
             if (error) {
                 alert('Lỗi: ' + error.message);
             } else {
                 console.log('Đã xóa giao dịch:', id);
-                // Không cần gọi loadData() vì Realtime sẽ tự cập nhật
+                loadData(); // Tải lại dữ liệu sau khi xóa
             }
         };
 
-        // Xóa tất cả giao dịch
+        // Xóa tất cả giao dịch của thiết bị hiện tại (GIỮ NGUYÊN)
         async function deleteAllTransactions() {
-            if (!confirm('⚠️ Xóa TẤT CẢ giao dịch? Hành động này không thể hoàn tác!')) return;
+            if (!confirm('⚠️ Xóa TẤT CẢ giao dịch của thiết bị này?')) return;
             
-            const { error } = await supabase.from('transactions').delete().neq('id', '');
+            const { error } = await _supabase.from('transactions').delete().eq('user_id', deviceId);
             if (error) {
                 alert('Lỗi: ' + error.message);
             } else {
                 console.log('Đã xóa tất cả giao dịch');
+                loadData();
             }
         }
 
-        // Thêm giao dịch mới
+        // Thêm giao dịch mới (GIỮ NGUYÊN)
         document.getElementById('transactionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -533,28 +526,21 @@
                 return;
             }
             
-            const syncDiv = document.getElementById('syncStatus');
-            syncDiv.className = 'sync-status status-connecting';
-            syncDiv.innerHTML = '⏳ Đang thêm giao dịch...';
-            
-            const { error } = await supabase.from('transactions').insert([{
+            const { error } = await _supabase.from('transactions').insert([{
                 description: description,
                 amount: amount,
                 type: type,
                 date: getTodayDate(),
-                created_by: deviceId  // Lưu lại ID thiết bị đã tạo (để tham khảo, không dùng để lọc)
+                user_id: deviceId
             }]);
             
             if (error) {
                 console.error('Lỗi insert:', error);
                 alert('Lỗi: ' + error.message);
-                syncDiv.className = 'sync-status status-error';
-                syncDiv.innerHTML = '❌ Lỗi: ' + error.message;
             } else {
                 document.getElementById('description').value = '';
                 document.getElementById('amount').value = '';
-                console.log('Đã thêm giao dịch thành công');
-                // Không cần gọi loadData() - Realtime sẽ tự cập nhật
+                loadData(); // Tải lại dữ liệu sau khi thêm
             }
         });
         
@@ -569,60 +555,38 @@
         // Gán sự kiện xóa tất cả
         document.getElementById('clearAllBtn').addEventListener('click', deleteAllTransactions);
         
-        // ==========================================
-        // THIẾT LẬP REALTIME - QUAN TRỌNG NHẤT
-        // ==========================================
-        let retryCount = 0;
-        const maxRetries = 5;
+        // THIẾT LẬP REALTIME - LẮNG NGHE THAY ĐỔI TỪ DATABASE
+        // Đây là phần QUAN TRỌNG để đồng bộ giữa các thiết bị
+        const channel = _supabase.channel('public:transactions');
         
-        function setupRealtime() {
-            const channel = supabase.channel('public:transactions');
-            
-            channel
-                .on('postgres_changes', 
-                    { 
-                        event: '*',  // Lắng nghe tất cả: INSERT, UPDATE, DELETE
-                        schema: 'public', 
-                        table: 'transactions' 
-                    }, 
-                    (payload) => {
-                        console.log('[Realtime] Có thay đổi:', payload.eventType, payload.new || payload.old);
-                        // Tải lại dữ liệu ngay khi có thay đổi
-                        loadData();
-                        
-                        const syncDiv = document.getElementById('syncStatus');
-                        syncDiv.className = 'sync-status status-connected';
-                        syncDiv.innerHTML = '✅ Đã đồng bộ | ' + new Date().toLocaleTimeString();
-                    }
-                )
-                .subscribe((status, err) => {
-                    if (status === 'SUBSCRIBED') {
-                        console.log('[Realtime] Đã kết nối thành công!');
-                        retryCount = 0;
-                        const syncDiv = document.getElementById('syncStatus');
-                        syncDiv.className = 'sync-status status-connected';
-                        syncDiv.innerHTML = '✅ Đồng bộ thời gian thực';
-                    } else if (status === 'CHANNEL_ERROR') {
-                        console.error('[Realtime] Lỗi kết nối:', err);
-                        const syncDiv = document.getElementById('syncStatus');
-                        syncDiv.className = 'sync-status status-error';
-                        syncDiv.innerHTML = '⚠️ Mất kết nối, đang thử lại...';
-                        
-                        // Tự động thử kết nối lại
-                        if (retryCount < maxRetries) {
-                            retryCount++;
-                            setTimeout(() => {
-                                console.log(`[Realtime] Thử kết nối lại lần ${retryCount}...`);
-                                channel.subscribe();
-                            }, 3000 * retryCount);
-                        }
-                    }
-                });
-        }
+        channel
+            .on('postgres_changes', 
+                { 
+                    event: '*',  // Lắng nghe tất cả: INSERT, UPDATE, DELETE
+                    schema: 'public', 
+                    table: 'transactions' 
+                }, 
+                (payload) => {
+                    console.log('[Realtime] Có thay đổi:', payload.eventType);
+                    // Khi có thay đổi từ bất kỳ thiết bị nào, tải lại dữ liệu
+                    loadData();
+                    
+                    const syncDiv = document.getElementById('syncStatus');
+                    syncDiv.className = 'sync-status status-connected';
+                    syncDiv.innerHTML = '✅ Đã đồng bộ | ' + new Date().toLocaleTimeString();
+                }
+            )
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    console.log('[Realtime] Đã kết nối thành công!');
+                    const syncDiv = document.getElementById('syncStatus');
+                    syncDiv.className = 'sync-status status-connected';
+                    syncDiv.innerHTML = '✅ Đồng bộ thời gian thực';
+                }
+            });
         
         // Khởi động
         console.log('Khởi động ứng dụng...');
-        setupRealtime();
         loadData();
     </script>
 </body>
