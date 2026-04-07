@@ -388,6 +388,26 @@
             color: #667eea;
             font-weight: 500;
         }
+        /* Nút xem tất cả */
+        .view-all-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-left: auto;
+        }
+        .view-all-btn:hover {
+            background: #5a67d8;
+        }
+        .categories-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -419,7 +439,10 @@
         <div class="categories-container">
             <div class="categories-header">
                 <div class="categories-title">📂 Hạng mục</div>
-                <button id="addCategoryBtn" class="add-category-btn">+ Thêm mới</button>
+                <div style="display: flex; gap: 10px;">
+                    <button id="viewAllBtn" class="view-all-btn">📋 Xem tất cả</button>
+                    <button id="addCategoryBtn" class="add-category-btn">+ Thêm mới</button>
+                </div>
             </div>
             <div id="categoriesList" class="categories-list">
                 <!-- Categories sẽ hiển thị ở đây -->
@@ -752,7 +775,17 @@
         if (addCategoryBtn) {
             addCategoryBtn.addEventListener('click', addNewCategory);
         }
-        
+        // Nút "Xem tất cả" - bỏ chọn category đang chọn
+        const viewAllBtn = document.getElementById('viewAllBtn');
+        if (viewAllBtn) {
+            viewAllBtn.addEventListener('click', () => {
+                if (currentCategory !== null) {
+                    currentCategory = null;
+                    renderCategories();
+                    loadData();
+                }
+            });
+        }
         // THIẾT LẬP REALTIME - LẮNG NGHE THAY ĐỔI TỪ DATABASE
         const channel = _supabase.channel('public:transactions');
         
