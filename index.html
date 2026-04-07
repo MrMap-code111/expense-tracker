@@ -3,69 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>Quản lý chi tiêu - Đồng bộ đám mây</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; }
-        .summary { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        .balance { text-align: center; margin-bottom: 20px; }
-        .balance-label { font-size: 14px; color: #666; text-transform: uppercase; letter-spacing: 1px; }
-        .balance-amount { font-size: 36px; font-weight: bold; color: #333; margin-top: 5px; }
-        .income-expense { display: flex; justify-content: space-between; gap: 15px; }
-        .income-box, .expense-box { flex: 1; text-align: center; padding: 15px; border-radius: 15px; background: #f8f9fa; }
-        .income-box h4, .expense-box h4 { font-size: 14px; color: #666; margin-bottom: 8px; }
-        .income-amount { color: #28a745; font-size: 20px; font-weight: bold; }
-        .expense-amount { color: #dc3545; font-size: 20px; font-weight: bold; }
-        .add-transaction { background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .form-group { margin-bottom: 15px; }
-        input, select, button { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 12px; font-size: 16px; font-family: inherit; }
-        input:focus, select:focus { outline: none; border-color: #667eea; }
-        .type-buttons { display: flex; gap: 10px; }
-        .type-btn { flex: 1; background: #f8f9fa; border: 2px solid #e0e0e0; cursor: pointer; text-align: center; padding: 12px; border-radius: 12px; }
-        .type-btn.active { background: #667eea; border-color: #667eea; color: white; }
-        button[type="submit"] { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; font-weight: bold; cursor: pointer; font-size: 16px; }
-        .transactions { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .transactions h3 { margin-bottom: 15px; color: #333; }
-        .transaction-list { max-height: 400px; overflow-y: auto; }
-        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0; }
-        .transaction-info { flex: 1; }
-        .transaction-name { font-weight: 500; color: #333; margin-bottom: 4px; }
-        .transaction-date { font-size: 12px; color: #999; }
-        .transaction-amount { font-weight: bold; font-size: 16px; margin-right: 15px; }
-        .income-text { color: #28a745; }
-        .expense-text { color: #dc3545; }
-        .delete-btn { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; width: auto; }
-        .empty-state { text-align: center; color: #999; padding: 30px; }
-        .clear-all { background: #dc3545; margin-top: 15px; width: auto; padding: 10px 20px; font-size: 14px; }
-        .sync-status { text-align: center; font-size: 12px; padding: 5px; margin-top: 10px; border-radius: 8px; }
-        .status-connected { background: #d4edda; color: #155724; }
-        .status-error { background: #f8d7da; color: #721c24; }
-        .status-connecting { background: #fff3cd; color: #856404; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* Card tổng quan */
+        .summary {
+            background: white;
+            border-radius: 24px;
+            padding: 24px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .balance {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .balance-amount {
+            font-size: 42px;
+            font-weight: 800;
+            color: #333;
+        }
+
+        .income-expense {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+
+        .income-box, .expense-box {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            border-radius: 18px;
+        }
+
+        .income-box {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+        }
+
+        .expense-box {
+            background: linear-gradient(135deg, #fbc2c2 0%, #ff9a9e 100%);
+        }
+
+        .income-box h4, .expense-box h4 {
+            font-size: 13px;
+            color: rgba(0,0,0,0.6);
+            margin-bottom: 8px;
+        }
+
+        .income-amount {
+            color: #2d6a4f;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .expense-amount {
+            color: #c92a2a;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        /* Form thêm giao dịch */
+        .add-transaction {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 16px;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+
+        .type-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .type-btn {
+            flex: 1;
+            background: #f0f0f0;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            padding: 12px;
+            border-radius: 16px;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .type-btn.income {
+            color: #2d6a4f;
+        }
+
+        .type-btn.expense {
+            color: #c92a2a;
+        }
+
+        .type-btn.active.income {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+            color: #1b4d3e;
+        }
+
+        .type-btn.active.expense {
+            background: linear-gradient(135deg, #fbc2c2 0%, #ff9a9e 100%);
+            color: #a61e1e;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        button[type="submit"]:active {
+            transform: scale(0.98);
+        }
+
+        /* Danh sách giao dịch */
+        .transactions {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .transaction-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-info {
+            flex: 1;
+        }
+
+        .transaction-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .transaction-date {
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .transaction-amount {
+            font-weight: 700;
+            font-size: 16px;
+            margin-right: 12px;
+        }
+
+        .income-text {
+            color: #2d6a4f;
+        }
+
+        .expense-text {
+            color: #c92a2a;
+        }
+
+        .delete-btn {
+            background: #fee2e2;
+            color: #c92a2a;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            width: auto;
+            transition: all 0.2s;
+        }
+
+        .delete-btn:active {
+            background: #ffc9c9;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #aaa;
+            padding: 40px 20px;
+        }
+
+        .empty-state span {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .clear-all {
+            background: #fee2e2;
+            color: #c92a2a;
+            margin-top: 15px;
+            width: auto;
+            padding: 10px 20px;
+            font-size: 13px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .sync-status {
+            text-align: center;
+            font-size: 11px;
+            padding: 8px;
+            margin-top: 12px;
+            border-radius: 30px;
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .status-connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-connecting {
+            background: #fff3cd;
+            color: #856404;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
+        <div class="header">
+            <h1>💰 Quản lý chi tiêu</h1>
+            <p>Đồng bộ thời gian thực • Mọi thiết bị</p>
+        </div>
+
         <div class="summary">
             <div class="balance">
                 <div class="balance-label">Tổng số dư</div>
                 <div class="balance-amount" id="balance">0₫</div>
             </div>
             <div class="income-expense">
-                <div class="income-box"><h4>Thu nhập</h4><div class="income-amount" id="totalIncome">0₫</div></div>
-                <div class="expense-box"><h4>Chi tiêu</h4><div class="expense-amount" id="totalExpense">0₫</div></div>
+                <div class="income-box">
+                    <h4>📈 Thu nhập</h4>
+                    <div class="income-amount" id="totalIncome">0₫</div>
+                </div>
+                <div class="expense-box">
+                    <h4>📉 Chi tiêu</h4>
+                    <div class="expense-amount" id="totalExpense">0₫</div>
+                </div>
             </div>
         </div>
 
         <div class="add-transaction">
+            <div class="section-title">
+                <span>➕</span> Thêm giao dịch mới
+            </div>
             <form id="transactionForm">
-                <div class="form-group"><input type="text" id="description" placeholder="Tên giao dịch" required></div>
-                <div class="form-group"><input type="number" id="amount" placeholder="Số tiền" required></div>
+                <div class="form-group">
+                    <input type="text" id="description" placeholder="Tên giao dịch (VD: Ăn sáng, Lương...)" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" id="amount" placeholder="Số tiền" step="1000" required>
+                </div>
                 <div class="form-group">
                     <div class="type-buttons">
-                        <button type="button" class="type-btn active" data-type="income">📈 Thu nhập</button>
-                        <button type="button" class="type-btn" data-type="expense">📉 Chi tiêu</button>
+                        <button type="button" class="type-btn income active" data-type="income">💰 Thu nhập</button>
+                        <button type="button" class="type-btn expense" data-type="expense">💸 Chi tiêu</button>
                     </div>
                 </div>
                 <button type="submit">➕ Thêm giao dịch</button>
@@ -73,9 +373,13 @@
         </div>
 
         <div class="transactions">
-            <h3>📋 Lịch sử giao dịch</h3>
-            <div class="transaction-list" id="transactionList"><div class="empty-state">Đang tải...</div></div>
-            <button class="clear-all" id="clearAllBtn" style="display: none;">🗑️ Xóa tất cả</button>
+            <div class="section-title">
+                <span>📋</span> Lịch sử giao dịch
+            </div>
+            <div class="transaction-list" id="transactionList">
+                <div class="empty-state"><span>📭</span> Chưa có giao dịch nào</div>
+            </div>
+            <button id="clearAllBtn" class="clear-all" style="display: none;">🗑️ Xóa tất cả</button>
             <div class="sync-status" id="syncStatus">🔄 Đang kết nối...</div>
         </div>
     </div>
@@ -88,63 +392,56 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im95Z296ZmZ2ZWdnZWFzcWhtcm5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU0NjE3NTEsImV4cCI6MjA5MTAzNzc1MX0.qPM1Crc3jSYu1ChEE7u5TOu6v8_Z4pPeliZ0VGa0yLU';
         // ==========================================
 
-        // 1. KHỞI TẠO SUPABASE CLIENT VỚI CẤU HÌNH CHỐNG MẤT KẾT NỐI
-        // BẬT Web Worker ĐỂ TIMER HOẠT ĐỘNG ỔN ĐỊNH KHI Ở CHẾ ĐỘ NỀN
-        // THÊM heartbeatCallback ĐỂ TỰ ĐỘNG PHÁT HIỆN VÀ KẾT NỐI LẠI [citation:8]
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-            realtime: {
-                worker: true, // Giải pháp 2: Bật Web Worker để tránh bị trình duyệt làm chậm
-                heartbeatCallback: (status) => { // Giải pháp 1: Tự động kết nối lại khi mất kết nối
-                    console.log('[Heartbeat] Status:', status);
-                    const syncDiv = document.getElementById('syncStatus');
-                    if (status === 'disconnected') {
-                        console.warn('[Heartbeat] Mất kết nối! Đang thử kết nối lại...');
-                        syncDiv.className = 'sync-status status-connecting';
-                        syncDiv.innerHTML = '⚠️ Mất kết nối, đang thử lại...';
-                        // Gọi connect() để thiết lập lại WebSocket
-                        supabase.connect();
-                    } else if (status === 'connected') {
-                        console.log('[Heartbeat] Kết nối được phục hồi.');
-                        syncDiv.className = 'sync-status status-connected';
-                        syncDiv.innerHTML = '✅ Đồng bộ thời gian thực';
-                    }
-                }
-            }
-        });
-
-        // Tạo ID thiết bị
-        let deviceId = localStorage.getItem('expense_device_id');
+        // Khởi tạo Supabase
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Tạo ID thiết bị (chỉ để ghi nhận, không dùng để lọc dữ liệu)
+        let deviceId = localStorage.getItem('device_id');
         if (!deviceId) {
             deviceId = crypto.randomUUID();
-            localStorage.setItem('expense_device_id', deviceId);
+            localStorage.setItem('device_id', deviceId);
         }
         console.log('Device ID:', deviceId);
 
-        // Các hàm tiện ích
-        function formatMoney(amount) { return amount.toLocaleString('vi-VN') + '₫'; }
-        function getTodayDate() { return new Date().toISOString().split('T')[0]; }
-        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-        
-        // Hàm cập nhật tổng quan
+        // Hàm format tiền
+        function formatMoney(amount) {
+            return amount.toLocaleString('vi-VN') + '₫';
+        }
+
+        // Lấy ngày hiện tại
+        function getTodayDate() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        // Cập nhật tổng thu/chi/số dư
         function updateSummary(transactions) {
-            const totalIncome = transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-            const totalExpense = transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+            let totalIncome = 0, totalExpense = 0;
+            transactions.forEach(t => {
+                if (t.type === 'income') totalIncome += t.amount;
+                else totalExpense += t.amount;
+            });
+            
             document.getElementById('balance').textContent = formatMoney(totalIncome - totalExpense);
             document.getElementById('totalIncome').textContent = formatMoney(totalIncome);
             document.getElementById('totalExpense').textContent = formatMoney(totalExpense);
         }
 
-        // Hàm hiển thị danh sách
+        // Hiển thị danh sách giao dịch
         function renderTransactions(transactions) {
             const listEl = document.getElementById('transactionList');
             const clearBtn = document.getElementById('clearAllBtn');
+            
             if (!transactions || transactions.length === 0) {
-                listEl.innerHTML = '<div class="empty-state">📭 Chưa có giao dịch</div>';
+                listEl.innerHTML = '<div class="empty-state"><span>📭</span> Chưa có giao dịch nào</div>';
                 clearBtn.style.display = 'none';
                 return;
             }
-            clearBtn.style.display = 'block';
-            const sorted = [...transactions].reverse();
+            
+            clearBtn.style.display = 'inline-block';
+            
+            // Sắp xếp theo ngày mới nhất
+            const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+            
             listEl.innerHTML = sorted.map(t => `
                 <div class="transaction-item">
                     <div class="transaction-info">
@@ -154,32 +451,25 @@
                     <div class="transaction-amount ${t.type === 'income' ? 'income-text' : 'expense-text'}">
                         ${t.type === 'income' ? '+' : '-'} ${formatMoney(t.amount)}
                     </div>
-                    <button class="delete-btn" onclick="deleteTransaction('${t.id}')">Xóa</button>
+                    <button class="delete-btn" onclick="deleteTransaction('${t.id}')">✕ Xóa</button>
                 </div>
             `).join('');
         }
 
-        // Hàm xóa giao dịch (gắn vào window để gọi từ HTML)
-        window.deleteTransaction = async (id) => {
-            if (!confirm('Xóa giao dịch này?')) return;
-            const { error } = await supabase.from('transactions').delete().eq('id', id);
-            if (error) alert('Lỗi: ' + error.message);
-        };
-
-        // Hàm xóa tất cả
-        async function deleteAll() {
-            if (!confirm('Xóa TẤT CẢ giao dịch?')) return;
-            const { error } = await supabase.from('transactions').delete().eq('user_id', deviceId);
-            if (error) alert('Lỗi: ' + error.message);
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
-        // Hàm tải dữ liệu
+        // Tải dữ liệu - QUAN TRỌNG: KHÔNG lọc theo device_id nữa!
         async function loadData() {
             console.log('Đang tải dữ liệu...');
+            
             const { data, error } = await supabase
                 .from('transactions')
                 .select('*')
-                .eq('user_id', deviceId)
                 .order('date', { ascending: false });
             
             if (error) {
@@ -187,69 +477,88 @@
                 document.getElementById('transactionList').innerHTML = `<div class="empty-state">❌ Lỗi: ${error.message}</div>`;
                 const syncDiv = document.getElementById('syncStatus');
                 syncDiv.className = 'sync-status status-error';
-                syncDiv.innerHTML = `❌ Lỗi DB: ${error.message}`;
+                syncDiv.innerHTML = `❌ Lỗi: ${error.message}`;
                 return;
             }
+            
+            console.log('Đã tải', data?.length || 0, 'giao dịch');
             renderTransactions(data || []);
             updateSummary(data || []);
+            
+            const syncDiv = document.getElementById('syncStatus');
+            syncDiv.className = 'sync-status status-connected';
+            syncDiv.innerHTML = '✅ Đồng bộ thời gian thực | ' + new Date().toLocaleTimeString();
         }
 
-        // 2. THIẾT LẬP REALTIME VỚI CƠ CHẾ PHỤC HỒI TỐT HƠN
-        // Đặt tên kênh rõ ràng, ví dụ: 'realtime:public:transactions'
-        const channelName = `realtime:${deviceId}`; 
-        const myChannel = supabase.channel(channelName);
+        // Xóa giao dịch
+        window.deleteTransaction = async (id) => {
+            if (!confirm('Xóa giao dịch này?')) return;
+            
+            const { error } = await supabase.from('transactions').delete().eq('id', id);
+            if (error) {
+                alert('Lỗi: ' + error.message);
+            } else {
+                console.log('Đã xóa giao dịch:', id);
+                // Không cần gọi loadData() vì Realtime sẽ tự cập nhật
+            }
+        };
 
-        myChannel
-            .on('postgres_changes', 
-                { event: '*', schema: 'public', table: 'transactions' }, 
-                (payload) => {
-                    console.log('[Realtime] Nhận thay đổi:', payload.eventType);
-                    loadData(); // Tải lại dữ liệu mới nhất khi có thay đổi
-                }
-            )
-            .subscribe((status, err) => {
-                if (status === 'SUBSCRIBED') {
-                    console.log('[Realtime] Đã đăng ký kênh thành công!');
-                    const syncDiv = document.getElementById('syncStatus');
-                    syncDiv.className = 'sync-status status-connected';
-                    syncDiv.innerHTML = '✅ Đồng bộ thời gian thực';
-                } else if (status === 'CHANNEL_ERROR') {
-                    console.error('[Realtime] Lỗi kênh:', err);
-                    const syncDiv = document.getElementById('syncStatus');
-                    syncDiv.className = 'sync-status status-error';
-                    syncDiv.innerHTML = '❌ Mất kết nối realtime';
-                } else if (status === 'CLOSED') {
-                    console.warn('[Realtime] Kênh đã đóng.');
-                    const syncDiv = document.getElementById('syncStatus');
-                    syncDiv.className = 'sync-status status-connecting';
-                    syncDiv.innerHTML = '🔄 Kết nối đã đóng, đang thử lại...';
-                }
-            });
+        // Xóa tất cả giao dịch
+        async function deleteAllTransactions() {
+            if (!confirm('⚠️ Xóa TẤT CẢ giao dịch? Hành động này không thể hoàn tác!')) return;
+            
+            const { error } = await supabase.from('transactions').delete().neq('id', '');
+            if (error) {
+                alert('Lỗi: ' + error.message);
+            } else {
+                console.log('Đã xóa tất cả giao dịch');
+            }
+        }
 
-        // 3. XỬ LÝ SỰ KIỆN THÊM GIAO DỊCH
+        // Thêm giao dịch mới
         document.getElementById('transactionForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
             const description = document.getElementById('description').value.trim();
             const amount = parseFloat(document.getElementById('amount').value);
             const type = document.querySelector('.type-btn.active').getAttribute('data-type');
             
-            if (!description) return alert('Nhập tên giao dịch');
-            if (isNaN(amount) || amount <= 0) return alert('Nhập số tiền hợp lệ');
-
+            if (!description) {
+                alert('Vui lòng nhập tên giao dịch');
+                return;
+            }
+            
+            if (isNaN(amount) || amount <= 0) {
+                alert('Vui lòng nhập số tiền hợp lệ');
+                return;
+            }
+            
+            const syncDiv = document.getElementById('syncStatus');
+            syncDiv.className = 'sync-status status-connecting';
+            syncDiv.innerHTML = '⏳ Đang thêm giao dịch...';
+            
             const { error } = await supabase.from('transactions').insert([{
-                description, amount, type, date: getTodayDate(), user_id: deviceId
+                description: description,
+                amount: amount,
+                type: type,
+                date: getTodayDate(),
+                created_by: deviceId  // Lưu lại ID thiết bị đã tạo (để tham khảo, không dùng để lọc)
             }]);
             
             if (error) {
+                console.error('Lỗi insert:', error);
                 alert('Lỗi: ' + error.message);
+                syncDiv.className = 'sync-status status-error';
+                syncDiv.innerHTML = '❌ Lỗi: ' + error.message;
             } else {
                 document.getElementById('description').value = '';
                 document.getElementById('amount').value = '';
-                // Không cần gọi loadData() vì Realtime sẽ tự cập nhật
+                console.log('Đã thêm giao dịch thành công');
+                // Không cần gọi loadData() - Realtime sẽ tự cập nhật
             }
         });
         
-        // Xử lý nút chọn loại thu/chi
+        // Chuyển đổi loại giao dịch
         document.querySelectorAll('.type-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
@@ -258,9 +567,62 @@
         });
         
         // Gán sự kiện xóa tất cả
-        document.getElementById('clearAllBtn').addEventListener('click', deleteAll);
+        document.getElementById('clearAllBtn').addEventListener('click', deleteAllTransactions);
         
-        // 4. KHỞI CHẠY
+        // ==========================================
+        // THIẾT LẬP REALTIME - QUAN TRỌNG NHẤT
+        // ==========================================
+        let retryCount = 0;
+        const maxRetries = 5;
+        
+        function setupRealtime() {
+            const channel = supabase.channel('public:transactions');
+            
+            channel
+                .on('postgres_changes', 
+                    { 
+                        event: '*',  // Lắng nghe tất cả: INSERT, UPDATE, DELETE
+                        schema: 'public', 
+                        table: 'transactions' 
+                    }, 
+                    (payload) => {
+                        console.log('[Realtime] Có thay đổi:', payload.eventType, payload.new || payload.old);
+                        // Tải lại dữ liệu ngay khi có thay đổi
+                        loadData();
+                        
+                        const syncDiv = document.getElementById('syncStatus');
+                        syncDiv.className = 'sync-status status-connected';
+                        syncDiv.innerHTML = '✅ Đã đồng bộ | ' + new Date().toLocaleTimeString();
+                    }
+                )
+                .subscribe((status, err) => {
+                    if (status === 'SUBSCRIBED') {
+                        console.log('[Realtime] Đã kết nối thành công!');
+                        retryCount = 0;
+                        const syncDiv = document.getElementById('syncStatus');
+                        syncDiv.className = 'sync-status status-connected';
+                        syncDiv.innerHTML = '✅ Đồng bộ thời gian thực';
+                    } else if (status === 'CHANNEL_ERROR') {
+                        console.error('[Realtime] Lỗi kết nối:', err);
+                        const syncDiv = document.getElementById('syncStatus');
+                        syncDiv.className = 'sync-status status-error';
+                        syncDiv.innerHTML = '⚠️ Mất kết nối, đang thử lại...';
+                        
+                        // Tự động thử kết nối lại
+                        if (retryCount < maxRetries) {
+                            retryCount++;
+                            setTimeout(() => {
+                                console.log(`[Realtime] Thử kết nối lại lần ${retryCount}...`);
+                                channel.subscribe();
+                            }, 3000 * retryCount);
+                        }
+                    }
+                });
+        }
+        
+        // Khởi động
+        console.log('Khởi động ứng dụng...');
+        setupRealtime();
         loadData();
     </script>
 </body>
