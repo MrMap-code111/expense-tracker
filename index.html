@@ -319,6 +319,75 @@
             background: #f8d7da;
             color: #721c24;
         }
+        /* Categories sidebar/menu */
+        .categories-container {
+            background: white;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .categories-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .categories-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+        .add-category-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .categories-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .category-item {
+            background: #f0f0f0;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .category-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .category-item .delete-category {
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 0 4px;
+        }
+        .category-item.active .delete-category {
+            color: rgba(255,255,255,0.7);
+        }
+        .current-category {
+            background: #667eea10;
+            border-radius: 16px;
+            padding: 12px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 14px;
+            color: #667eea;
+            font-weight: 500;
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -346,6 +415,22 @@
             </div>
         </div>
 
+                <!-- Phần hạng mục -->
+        <div class="categories-container">
+            <div class="categories-header">
+                <div class="categories-title">📂 Hạng mục</div>
+                <button id="addCategoryBtn" class="add-category-btn">+ Thêm mới</button>
+            </div>
+            <div id="categoriesList" class="categories-list">
+                <!-- Categories sẽ hiển thị ở đây -->
+            </div>
+        </div>
+        
+        <!-- Hiển thị hạng mục đang chọn -->
+        <div id="currentCategoryDisplay" class="current-category">
+            📍 Đang xem: Tất cả giao dịch
+        </div>
+        
         <div class="add-transaction">
             <div class="section-title">
                 <span>➕</span> Thêm giao dịch mới
@@ -386,6 +471,94 @@
         
         // Khởi tạo Supabase (GIỮ NGUYÊN CÁCH KHỞI TẠO CỦA CODE CŨ)
         const _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+                // Quản lý categories
+        let categories = [];
+        let currentCategory = null; // null = tất cả, hoặc tên category
+
+        // Khởi tạo categories mặc định
+        function initCategories() {
+            // Đọc categories từ localStorage
+            const saved = localStorage.getItem('categories');
+            if (saved) {
+                categories = JSON.parse(saved);
+            } else {
+                // Categories mặc định
+                categories = ['Ăn uống', 'Di chuyển', 'Giải trí', 'Sức khỏe', 'Hóa đơn', 'Mua sắm', 'Khác'];
+                localStorage.setItem('categories', JSON.stringify(categories));
+            }
+            renderCategories();
+        }
+        
+        // Hiển thị danh sách categories
+        function renderCategories() {
+            const container = document.getElementById('categoriesList');
+            if (!container) return; // Thoát nếu chưa có element
+            
+            if (categories.length === 0) {
+                container.innerHTML = '<div style="padding: 10px; color: #999;">Chưa có hạng mục</div>';
+                return;
+            }
+            
+            container.innerHTML = categories.map(cat => `
+                <div class="category-item ${currentCategory === cat ? 'active' : ''}" onclick="selectCategory('${escapeHtml(cat)}')">
+                    <span>${escapeHtml(cat)}</span>
+                    <button class="delete-category" onclick="event.stopPropagation(); deleteCategory('${escapeHtml(cat)}')">✕</button>
+                </div>
+            `).join('');
+            
+            // Cập nhật hiển thị hạng mục đang chọn
+            const displayEl = document.getElementById('currentCategoryDisplay');
+            if (displayEl) {
+                if (currentCategory) {
+                    displayEl.innerHTML = `📍 Đang xem: ${escapeHtml(currentCategory)}`;
+                } else {
+                    displayEl.innerHTML = `📍 Đang xem: Tất cả giao dịch`;
+                }
+            }
+        }
+        
+        // Chọn category (thêm vào window để gọi từ onclick)
+        window.selectCategory = function(category) {
+            if (currentCategory === category) {
+                currentCategory = null; // Bỏ chọn
+            } else {
+                currentCategory = category;
+            }
+            renderCategories();
+            loadData(); // Tải lại dữ liệu theo category
+        }
+        
+        // Thêm category mới
+        function addNewCategory() {
+            const newCat = prompt('Nhập tên hạng mục mới:');
+            if (newCat && newCat.trim()) {
+                const catName = newCat.trim();
+                if (!categories.includes(catName)) {
+                    categories.push(catName);
+                    localStorage.setItem('categories', JSON.stringify(categories));
+                    renderCategories();
+                } else {
+                    alert('Hạng mục đã tồn tại!');
+                }
+            }
+        }
+        
+        // Xóa category
+        window.deleteCategory = function(category) {
+            if (confirm(`Xóa hạng mục "${category}"? Các giao dịch thuộc hạng mục này sẽ hiển thị là "Khác".`)) {
+                categories = categories.filter(c => c !== category);
+                localStorage.setItem('categories', JSON.stringify(categories));
+                
+                // Nếu đang chọn category bị xóa, chuyển về Tất cả
+                if (currentCategory === category) {
+                    currentCategory = null;
+                }
+                
+                renderCategories();
+                loadData();
+            }
+        }
         
         // Tạo ID thiết bị (GIỮ NGUYÊN)
         let deviceId = localStorage.getItem('device_id');
@@ -430,15 +603,13 @@
             }
             
             clearBtn.style.display = 'inline-block';
-            
-            // Sắp xếp theo ngày mới nhất
             const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
             
             listEl.innerHTML = sorted.map(t => `
                 <div class="transaction-item">
                     <div class="transaction-info">
                         <div class="transaction-name">${escapeHtml(t.description)}</div>
-                        <div class="transaction-date">${t.date}</div>
+                        <div class="transaction-date">${t.date} • ${escapeHtml(t.category || 'Khác')}</div>
                     </div>
                     <div class="transaction-amount ${t.type === 'income' ? 'income-text' : 'expense-text'}">
                         ${t.type === 'income' ? '+' : '-'} ${formatMoney(t.amount)}
@@ -459,27 +630,37 @@
         async function loadData() {
             console.log('Đang tải dữ liệu...');
             
-            const { data, error } = await _supabase
-                .from('transactions')
-                .select('*');
+            // Tạo query cơ bản
+            let query = _supabase.from('transactions').select('*');
             
+            // Lọc theo category nếu đang chọn (currentCategory không phải null)
+            if (currentCategory) {
+                query = query.eq('category', currentCategory);
+            }
+            
+            // Thực hiện query và sắp xếp theo ngày
+            const { data, error } = await query.order('date', { ascending: false });
             
             if (error) {
                 console.error('Lỗi tải dữ liệu:', error);
                 document.getElementById('transactionList').innerHTML = `<div class="empty-state">❌ Lỗi: ${error.message}</div>`;
                 const syncDiv = document.getElementById('syncStatus');
-                syncDiv.className = 'sync-status status-error';
-                syncDiv.innerHTML = `❌ Lỗi: ${error.message}`;
+                if (syncDiv) {
+                    syncDiv.className = 'sync-status status-error';
+                    syncDiv.innerHTML = `❌ Lỗi: ${error.message}`;
+                }
                 return;
             }
             
-            console.log('Đã tải', data?.length || 0, 'giao dịch');
+            console.log('Đã tải', data?.length || 0, 'giao dịch', currentCategory ? `(Lọc theo: ${currentCategory})` : '(Tất cả)');
             renderTransactions(data || []);
             updateSummary(data || []);
             
             const syncDiv = document.getElementById('syncStatus');
-            syncDiv.className = 'sync-status status-connected';
-            syncDiv.innerHTML = '✅ Đồng bộ thời gian thực | ' + new Date().toLocaleTimeString();
+            if (syncDiv) {
+                syncDiv.className = 'sync-status status-connected';
+                syncDiv.innerHTML = '✅ Đồng bộ thời gian thực | ' + new Date().toLocaleTimeString();
+            }
         }
 
         // Xóa giao dịch (GIỮ NGUYÊN)
@@ -532,12 +713,16 @@
                 return;
             }
             
+            // Lấy category đang chọn (nếu có), mặc định là 'Khác'
+            const selectedCategory = currentCategory || 'Khác';
+            
             const { error } = await _supabase.from('transactions').insert([{
                 description: description,
                 amount: amount,
                 type: type,
                 date: getTodayDate(),
-                user_id: deviceId
+                user_id: deviceId,
+                category: selectedCategory  // 👈 THÊM DÒNG NÀY
             }]);
             
             if (error) {
@@ -546,11 +731,12 @@
             } else {
                 document.getElementById('description').value = '';
                 document.getElementById('amount').value = '';
-                loadData(); // Tải lại dữ liệu sau khi thêm
+                // KHÔNG cần gọi loadData() vì Realtime sẽ tự cập nhật
+                // Nếu muốn giữ loadData() cũng được, không sao
             }
         });
         
-        // Chuyển đổi loại giao dịch
+               // Chuyển đổi loại giao dịch
         document.querySelectorAll('.type-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
@@ -561,38 +747,47 @@
         // Gán sự kiện xóa tất cả
         document.getElementById('clearAllBtn').addEventListener('click', deleteAllTransactions);
         
+        // 👇 THÊM SỰ KIỆN CHO NÚT THÊM HẠNG MỤC (Bước 8)
+        const addCategoryBtn = document.getElementById('addCategoryBtn');
+        if (addCategoryBtn) {
+            addCategoryBtn.addEventListener('click', addNewCategory);
+        }
+        
         // THIẾT LẬP REALTIME - LẮNG NGHE THAY ĐỔI TỪ DATABASE
-        // Đây là phần QUAN TRỌNG để đồng bộ giữa các thiết bị
         const channel = _supabase.channel('public:transactions');
         
         channel
             .on('postgres_changes', 
                 { 
-                    event: '*',  // Lắng nghe tất cả: INSERT, UPDATE, DELETE
+                    event: '*',
                     schema: 'public', 
                     table: 'transactions' 
                 }, 
                 (payload) => {
                     console.log('[Realtime] Có thay đổi:', payload.eventType);
-                    // Khi có thay đổi từ bất kỳ thiết bị nào, tải lại dữ liệu
                     loadData();
                     
                     const syncDiv = document.getElementById('syncStatus');
-                    syncDiv.className = 'sync-status status-connected';
-                    syncDiv.innerHTML = '✅ Đã đồng bộ | ' + new Date().toLocaleTimeString();
+                    if (syncDiv) {
+                        syncDiv.className = 'sync-status status-connected';
+                        syncDiv.innerHTML = '✅ Đã đồng bộ | ' + new Date().toLocaleTimeString();
+                    }
                 }
             )
             .subscribe((status) => {
                 if (status === 'SUBSCRIBED') {
                     console.log('[Realtime] Đã kết nối thành công!');
                     const syncDiv = document.getElementById('syncStatus');
-                    syncDiv.className = 'sync-status status-connected';
-                    syncDiv.innerHTML = '✅ Đồng bộ thời gian thực';
+                    if (syncDiv) {
+                        syncDiv.className = 'sync-status status-connected';
+                        syncDiv.innerHTML = '✅ Đồng bộ thời gian thực';
+                    }
                 }
             });
         
-        // Khởi động
+        // 👇 SỬA PHẦN KHỞI ĐỘNG: Thêm initCategories() trước loadData()
         console.log('Khởi động ứng dụng...');
+        initCategories();  // 👈 THÊM DÒNG NÀY
         loadData();
     </script>
 </body>
