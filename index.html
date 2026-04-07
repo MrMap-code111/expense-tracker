@@ -590,7 +590,13 @@
                     alert('Lỗi: ' + error.message);
                 } else {
                     console.log('Đã thêm category:', catName);
-                    // Không cần push vào mảng categories, initCategories sẽ tự cập nhật
+                    
+                    // 👇 THÊM CÁC DÒNG NÀY ĐỂ CẬP NHẬT GIAO DIỆN NGAY
+                    // Thêm category mới vào mảng categories trong bộ nhớ
+                    categories.push(catName);
+                    
+                    // Cập nhật lại giao diện categories ngay lập tức
+                    renderCategories();
                 }
             }
         }
