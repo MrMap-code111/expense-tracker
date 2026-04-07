@@ -497,14 +497,20 @@
 
         // Xóa tất cả giao dịch của thiết bị hiện tại (GIỮ NGUYÊN)
         async function deleteAllTransactions() {
-            if (!confirm('⚠️ Xóa TẤT CẢ giao dịch của thiết bị này?')) return;
+            if (!confirm('⚠️ Xóa TẤT CẢ giao dịch? Hành động này không thể hoàn tác!')) return;
+    
+        // Dùng neq với một giá trị không tồn tại để xóa tất cả
+            const { error } = await _supabase
+                .from('transactions')
+                .delete()
+                .neq('id', '00000000-0000-0000-0000-000000000000');  // ✅ Đã có WHERE
             
-            const { error } = await _supabase.from('transactions').delete();
             if (error) {
+                console.error('Lỗi xóa tất cả:', error);
                 alert('Lỗi: ' + error.message);
             } else {
                 console.log('Đã xóa tất cả giao dịch');
-                loadData();
+         // Không cần gọi loadData() vì Realtime sẽ tự cập nhật
             }
         }
 
