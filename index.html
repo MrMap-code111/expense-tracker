@@ -811,8 +811,8 @@
             
             // Lấy category đang chọn (nếu có), mặc định là 'Khác'
             const selectedCategory = currentCategory || 'Khác';
-            
-           const { error } = await _supabase.from('transactions').insert([{
+
+            const { error } = await _supabase.from('transactions').insert([{
                 description: description,
                 amount: amount,
                 type: type,
@@ -841,8 +841,8 @@
                     }, 2000);
                 }
             }
-        
-               // Chuyển đổi loại giao dịch
+        });
+        // Chuyển đổi loại giao dịch
         document.querySelectorAll('.type-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
