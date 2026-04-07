@@ -461,8 +461,8 @@
             
             const { data, error } = await _supabase
                 .from('transactions')
-                .select('*')
-                .eq('user_id', deviceId);  // GIỮ NGUYÊN điều kiện lọc này
+                .select('*');
+            
             
             if (error) {
                 console.error('Lỗi tải dữ liệu:', error);
@@ -499,7 +499,7 @@
         async function deleteAllTransactions() {
             if (!confirm('⚠️ Xóa TẤT CẢ giao dịch của thiết bị này?')) return;
             
-            const { error } = await _supabase.from('transactions').delete().eq('user_id', deviceId);
+            const { error } = await _supabase.from('transactions').delete();
             if (error) {
                 alert('Lỗi: ' + error.message);
             } else {
