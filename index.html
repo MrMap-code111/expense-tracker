@@ -763,20 +763,31 @@
 
         // Xóa tất cả giao dịch của thiết bị hiện tại (GIỮ NGUYÊN)
         async function deleteAllTransactions() {
-            if (!confirm('⚠️ Xóa TẤT CẢ giao dịch? Hành động này không thể hoàn tác!')) return;
-    
-        // Dùng neq với một giá trị không tồn tại để xóa tất cả
+            if (!confirm('⚠️ Xóa TẤT CẢ giao dịch?\n\nHành động này không thể hoàn tác!')) return;
+            
             const { error } = await _supabase
                 .from('transactions')
                 .delete()
-                .neq('id', '00000000-0000-0000-0000-000000000000');  // ✅ Đã có WHERE
+                .neq('id', '00000000-0000-0000-0000-000000000000');
             
             if (error) {
                 console.error('Lỗi xóa tất cả:', error);
                 alert('Lỗi: ' + error.message);
             } else {
                 console.log('Đã xóa tất cả giao dịch');
-         // Không cần gọi loadData() vì Realtime sẽ tự cập nhật
+                
+                // 👇 THÊM DÒNG NÀY - Tải lại dữ liệu ngay
+                loadData();
+                
+                // Hiệu ứng thông báo
+                const syncDiv = document.getElementById('syncStatus');
+                if (syncDiv) {
+                    syncDiv.className = 'sync-status status-connected';
+                    syncDiv.innerHTML = '🗑️ Đã xóa tất cả | ' + new Date().toLocaleTimeString();
+                    setTimeout(() => {
+                        if (syncDiv) syncDiv.innerHTML = '✅ Đồng bộ thời gian thực';
+                    }, 2000);
+                }
             }
         }
 
@@ -801,13 +812,13 @@
             // Lấy category đang chọn (nếu có), mặc định là 'Khác'
             const selectedCategory = currentCategory || 'Khác';
             
-            const { error } = await _supabase.from('transactions').insert([{
+           const { error } = await _supabase.from('transactions').insert([{
                 description: description,
                 amount: amount,
                 type: type,
                 date: getTodayDate(),
                 user_id: deviceId,
-                category: selectedCategory  // 👈 THÊM DÒNG NÀY
+                category: selectedCategory
             }]);
             
             if (error) {
@@ -816,10 +827,20 @@
             } else {
                 document.getElementById('description').value = '';
                 document.getElementById('amount').value = '';
-                // KHÔNG cần gọi loadData() vì Realtime sẽ tự cập nhật
-                // Nếu muốn giữ loadData() cũng được, không sao
+                
+                // 👇 THÊM DÒNG NÀY - Tải lại dữ liệu ngay
+                loadData();
+                
+                // Hiệu ứng thông báo
+                const syncDiv = document.getElementById('syncStatus');
+                if (syncDiv) {
+                    syncDiv.className = 'sync-status status-connected';
+                    syncDiv.innerHTML = '✅ Đã thêm giao dịch | ' + new Date().toLocaleTimeString();
+                    setTimeout(() => {
+                        if (syncDiv) syncDiv.innerHTML = '✅ Đồng bộ thời gian thực';
+                    }, 2000);
+                }
             }
-        });
         
                // Chuyển đổi loại giao dịch
         document.querySelectorAll('.type-btn').forEach(btn => {
