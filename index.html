@@ -595,7 +595,6 @@
             }
         }
         
-        // Xóa category khỏi database
         window.deleteCategory = async function(category) {
             if (category === 'Khác') {
                 alert('Không thể xóa hạng mục "Khác"!');
@@ -621,12 +620,22 @@
                     .update({ category: 'Khác' })
                     .eq('category', category);
                 
-                console.log('Đã xóa category:', category);
+                // 👇 THÊM CÁC DÒNG NÀY ĐỂ CẬP NHẬT GIAO DIỆN NGAY
+                // Xóa category khỏi mảng categories trong bộ nhớ
+                categories = categories.filter(c => c !== category);
                 
                 // Nếu đang chọn category bị xóa, chuyển về Tất cả
                 if (currentCategory === category) {
                     currentCategory = null;
                 }
+                
+                // Cập nhật lại giao diện categories ngay lập tức
+                renderCategories();
+                
+                // Tải lại dữ liệu giao dịch
+                loadData();
+                
+                console.log('Đã xóa category và cập nhật giao diện:', category);
             }
         }
         
